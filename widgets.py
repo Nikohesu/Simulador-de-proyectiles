@@ -1,8 +1,14 @@
 import pygame
 class boton:
-    def __init__(self,screen, x, y, width, height, color_off, color_on, text_off, text_on, color_text, def_off, def_on):#hcolor es hover lo mismo con htexto
+    def __init__(self,screen, vw, vh, width, height, color_off, color_on, text_off, text_on, color_text, def_off, def_on):#hcolor es hover lo mismo con htexto
         self.screen = screen
-        self.rect = pygame.Rect(x-width, y-height, width, height)
+        self.screen_width = screen.get_width()
+        self.screen_height = screen.get_height()
+        self.width = width
+        self.height = height
+        self.vw = vw
+        self.vh = vh
+        self.rect = pygame.Rect((vw*self.screen_width)-width, (vh*self.screen_height)-height, width, height)
         self.color_off = color_off
         self.color_on = color_on
         self.text_off = text_off
@@ -29,6 +35,7 @@ class boton:
         
         self.screen.blit(texto_renderizar, texto_centrado)
         
+        
     def presionado(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
@@ -48,8 +55,10 @@ class boton:
                     self.boton_state = False
                     if self.def_off:
                         self.def_off()
-
-    def estado (self):
-        return self.boton_state                
+    def position_resize(self):
+        if self.screen_width != self.screen.get_width or self.screen_height != self.screen.get_height:
+            self.screen_width = self.screen.get_width()
+            self.screen_height = self.screen.get_height()
+            self.rect = pygame.Rect((self.vw*self.screen_width)-self.width, (self.vh*self.screen_height)-self.height, self.width, self.height)
   
 

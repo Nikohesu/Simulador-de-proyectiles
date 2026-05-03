@@ -33,13 +33,14 @@ class proyectil:#separacion en clases, procesar por separado las fisicas y los g
         self.fisicas = fsproyecctil(self.posicion,self.tamaño,self.masa,self.screen)
         self.graficos = grproyectil(self.color,escala)
     def draw(self):
+
         if self.img:
-            if lanzar.estado():
+            if lanzar.boton_state:
                 self.graficos.dibujarConImagen(self.screen,self.fisicas.actualizar(),self.tamaño,self.img)
             else:
                 self.graficos.dibujarConImagen(self.screen,self.posicion,self.tamaño,self.img)
         else:
-            if lanzar.estado():
+            if lanzar.boton_state:
                 self.graficos.dibujar(self.screen,self.fisicas.actualizar(),self.tamaño,self.color)
             else:
                 self.graficos.dibujar(self.screen,self.posicion,self.tamaño,self.color)
@@ -90,9 +91,14 @@ class grproyectil:
 
 
 
-proyectilv1 = proyectil(screen,4,46,4,4,1,(250,0,0),False)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
+proyectilv1 = proyectil(screen,4,46,4,4,1,(250,0,0),imghumano)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
 proyectilv2 = proyectil(screen,4,46,4,4,2,(0,0,250),imgpiedra)
-lanzar = widgets.boton(screen,screenwidth, screenheight, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),False,False)
+lanzar = widgets.boton(screen,1, 1, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),False,False)
+
+proyectilv1.fisicas.fuerzay(20)
+proyectilv1.fisicas.fuerzax(2)
+proyectilv2.fisicas.fuerzay(10)
+proyectilv2.fisicas.fuerzax(10)
 
 
 while running:
@@ -103,6 +109,7 @@ while running:
     proyectilv2.draw()
 
     lanzar.dibujar()
+    lanzar.position_resize()
 
 
     pygame.display.flip()
@@ -125,6 +132,7 @@ while running:
                 print(f"Valor de gravedad: {gravedad}")
 
         lanzar.presionado(event)
+
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
