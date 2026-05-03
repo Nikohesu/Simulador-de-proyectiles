@@ -1,5 +1,7 @@
 import pygame
 import sys
+import widgets
+
 pygame.init()
 time = pygame.time.Clock()
 dtime = 0
@@ -19,53 +21,6 @@ imgnave = pygame.image.load("assets/img/nave.png").convert_alpha()
 
 pygame.display.set_icon(imgnave)
 
-
-class boton:
-    def __init__(self, x, y, width, height, color,hcolor, texto,htexto, ctexto):#hcolor es hover lo mismo con htexto
-        self.rect = pygame.Rect(x, y, width, height)
-        self.color = color
-        self.hcolor = hcolor
-        self.texto = texto
-        self.htexto = htexto
-        self.ctexto = ctexto
-        self.bpresionado = False
-        self.font = pygame.font.SysFont(None, 30)
-        self.drawcolor = color
-        self.drawtext = texto
-        
-    def dibujar(self, screen):
-        pygame.draw.rect(screen, self.drawcolor, self.rect, 0, border_radius=20)
-        pygame.draw.rect(screen, (0, 0, 0,), self.rect, 5, border_radius=20)
-        
-        texto_renderizar = self.font.render(self.drawtext, True, self.ctexto) #renderizar el texto
-        
-        texto_centrado = texto_renderizar.get_rect(center = self.rect.center) #centrar
-        
-        screen.blit(texto_renderizar, texto_centrado)
-        
-        
-        
-        
-    def presionado(self, event):
-        global fisicsrunning
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                if not self.bpresionado:
-                    self.drawcolor = self.hcolor
-                    self.drawtext = self.htexto
-                    self.bpresionado = 1
-                    fisicsrunning = True
-                    proyectilv1.fisicas.fuerzay(newtons)
-                    proyectilv1.fisicas.fuerzax(newtons)
-                    proyectilv2.fisicas.fuerzay(newtons)
-                    proyectilv2.fisicas.fuerzax(newtons)
-
-                else :
-                    self.drawcolor=self.color
-                    self.drawtext = self.texto
-                    self.bpresionado = 0
-                    fisicsrunning = False
-
 class proyectil:#separacion en clases, procesar por separado las fisicas y los graficos, luego se unen con una clase principal
     def __init__(self,screen,x,y,width,height,masa,color,img):
         self.screen = screen
@@ -79,12 +34,12 @@ class proyectil:#separacion en clases, procesar por separado las fisicas y los g
         self.graficos = grproyectil(self.color,escala)
     def draw(self):
         if self.img:
-            if fisicsrunning:
+            if lanzar.estado():
                 self.graficos.dibujarConImagen(self.screen,self.fisicas.actualizar(),self.tamaño,self.img)
             else:
                 self.graficos.dibujarConImagen(self.screen,self.posicion,self.tamaño,self.img)
         else:
-            if fisicsrunning:
+            if lanzar.estado():
                 self.graficos.dibujar(self.screen,self.fisicas.actualizar(),self.tamaño,self.color)
             else:
                 self.graficos.dibujar(self.screen,self.posicion,self.tamaño,self.color)
@@ -137,7 +92,7 @@ class grproyectil:
 
 proyectilv1 = proyectil(screen,4,46,4,4,1,(250,0,0),False)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
 proyectilv2 = proyectil(screen,4,46,4,4,2,(0,0,250),imgpiedra)
-boton_1 = boton(screenwidth-150, screenheight-50, 150, 50, (255, 0, 0),(0,250,0), "Lanzar","Parar", (255, 255, 255))
+lanzar = widgets.boton(screen,screenwidth, screenheight, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),False,False)
 
 
 while running:
@@ -147,7 +102,7 @@ while running:
     proyectilv1.draw()
     proyectilv2.draw()
 
-    boton_1.dibujar(screen)
+    lanzar.dibujar()
 
 
     pygame.display.flip()
@@ -169,7 +124,7 @@ while running:
                 gravedad -= 1
                 print(f"Valor de gravedad: {gravedad}")
 
-        boton_1.presionado(event)
+        lanzar.presionado(event)
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
