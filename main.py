@@ -1,6 +1,7 @@
 import pygame
 import sys
 import widgets
+import math
 
 pygame.init()
 time = pygame.time.Clock()
@@ -8,18 +9,33 @@ dtime = 0
 screenwidth,screenheight = 800,500
 screen = pygame.display.set_mode((800,500),pygame.RESIZABLE)
 pygame.display.set_caption("simulador de lanzamiento de proyectiles")
-newtons = 0
+newtons = 15
 gravedad = 9.8
 
 running = True
 fisicsrunning = False
 escala = 10 #10 pixeles equivale a 1 metro
 
+angulo = 0
+
 imghumano = pygame.image.load("assets/img/humano.png").convert_alpha()
 imgpiedra = pygame.image.load("assets/img/piedra.png").convert_alpha()
 imgnave = pygame.image.load("assets/img/nave.png").convert_alpha()
 
 pygame.display.set_icon(imgnave)
+
+
+def reiniciar ():
+        proyectilv1.fisicas.posicion = pygame.math.Vector2(0,45)
+        proyectilv2.fisicas.posicion = pygame.math.Vector2(0,45)
+        proyectilv1.fisicas.velocidad = pygame.math.Vector2(0,0)
+        proyectilv2.fisicas.velocidad = pygame.math.Vector2(0,0)
+        proyectilv1.posicion = pygame.math.Vector2(0,45)
+        proyectilv2.posicion = pygame.math.Vector2(0,45)
+
+def lanzarTodos():
+    proyectilv1.fisicas.lanzamientoCA(angulo)
+    proyectilv2.fisicas.lanzamientoCA(angulo)
 
 class proyectil:#separacion en clases, procesar por separado las fisicas y los graficos, luego se unen con una clase principal
     def __init__(self,screen,x,y,width,height,masa,color,img):
@@ -54,10 +70,16 @@ class fsproyecctil:
         self.suelo = False
         self.velocidad = pygame.math.Vector2(0,0)
 
-    def fuerzax(self,fuerza):
-        self.velocidad.x += (fuerza/self.masa)
-    def fuerzay(self,fuerza):
-        self.velocidad.y -= (fuerza/self.masa)
+
+    def lanzamientoCA (self,angulo):
+        print("lanzamiento ejecutado con angulo: ", angulo)
+        angulo = math.radians(angulo)
+        vx = (newtons / self.masa) * math.cos(angulo)
+        vy = (newtons / self.masa) * math.sin(angulo)
+        print ("velocidad en x: ",vx)
+        print("velocidad en y:", vy)
+        self.velocidad.x += vx
+        self.velocidad.y -= vy
         self.suelo = False
 
 
@@ -66,17 +88,20 @@ class fsproyecctil:
 
         if not self.suelo:
             self.velocidad.y += gravedad*dtime
-            self.posicion += self.velocidad * dtime
 
         if self.posicion.y + self.tamaño.y >= limite_suelo:
             self.posicion.y = limite_suelo - self.tamaño.y
-            self.velocidad.y = 0
+            #self.velocidad.y = 0
             self.suelo = True
         else:
             self.suelo = False
 
-    def actualizar(self):
+    def act_posicion (self):#funcion que actualiza las posiciones segun la velocidad actual
+        self.posicion += self.velocidad*dtime
+
+    def actualizar(self):#Aqui solo van actualizaciones con velocidad o aceleracion contantes
         self.apigravedad()
+        self.act_posicion()
         return self.posicion
 class grproyectil:
     def __init__(self,color,escala):
@@ -91,14 +116,10 @@ class grproyectil:
 
 
 
-proyectilv1 = proyectil(screen,4,46,4,4,1,(250,0,0),imghumano)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
-proyectilv2 = proyectil(screen,4,46,4,4,2,(0,0,250),imgpiedra)
-lanzar = widgets.boton(screen,1, 1, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),False,False)
+proyectilv1 = proyectil(screen,0,45,4,4,1,(250,0,0),imghumano)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
+proyectilv2 = proyectil(screen,0,45,4,4,2,(0,0,250),imgpiedra)
+lanzar = widgets.boton(screen,1, 1, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),reiniciar,lanzarTodos)
 
-proyectilv1.fisicas.fuerzay(20)
-proyectilv1.fisicas.fuerzax(2)
-proyectilv2.fisicas.fuerzay(10)
-proyectilv2.fisicas.fuerzax(10)
 
 
 while running:
@@ -130,7 +151,12 @@ while running:
             if event.key == pygame.K_LEFT:  
                 gravedad -= 1
                 print(f"Valor de gravedad: {gravedad}")
-
+            if event.key == pygame.K_a:
+                angulo += 5
+                print(f"Valor del angulo : ", angulo)
+            if event.key == pygame.K_d:
+                angulo -= 5
+                print(f"Valor del angulo : ", angulo)
         lanzar.presionado(event)
 
         if event.type == pygame.QUIT:
