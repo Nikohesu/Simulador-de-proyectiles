@@ -1,0 +1,20 @@
+{
+    "button": {
+        "colours": {
+            "normal_bg": "#E6A34C",
+            "hovered_bg": "#0FB4FA",
+            "active_bg": "#FA0F0F",
+            "normal_text": "#ffffff"
+        },
+
+        "misc": {
+            "shape": "rounded-rectangle",
+            "shape_corner_radius": "25",
+
+            "border_radius": "25",
+            "padding": "10px 20px",
+            "font_size": "16px"
+        }
+    }
+
+}
