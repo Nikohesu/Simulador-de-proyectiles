@@ -11,12 +11,13 @@ screen = pygame.display.set_mode((800,500),pygame.RESIZABLE)
 pygame.display.set_caption("simulador de lanzamiento de proyectiles")
 newtons = 15
 gravedad = 9.8
+viento = 3
 
 running = True
 fisicsrunning = False
 escala = 10 #10 pixeles equivale a 1 metro
 
-angulo = 0
+angulo = 45
 
 imghumano = pygame.image.load("assets/img/humano.png").convert_alpha()
 imgpiedra = pygame.image.load("assets/img/piedra.png").convert_alpha()
@@ -24,42 +25,52 @@ imgnave = pygame.image.load("assets/img/nave.png").convert_alpha()
 
 pygame.display.set_icon(imgnave)
 
+proyectiles = []
+active_proyectil = None
 
-def reiniciar ():
-        proyectilv1.fisicas.posicion = pygame.math.Vector2(0,45)
-        proyectilv2.fisicas.posicion = pygame.math.Vector2(0,45)
-        proyectilv1.fisicas.velocidad = pygame.math.Vector2(0,0)
-        proyectilv2.fisicas.velocidad = pygame.math.Vector2(0,0)
-        proyectilv1.posicion = pygame.math.Vector2(0,45)
-        proyectilv2.posicion = pygame.math.Vector2(0,45)
+def reiniciar():
+    for proyectil in proyectiles:
+        proyectil.posicion = proyectil.initial_posicion.copy()
+        proyectil.fisicas.posicion = proyectil.posicion
+        proyectil.fisicas.velocidad = pygame.math.Vector2(0,0)
+        proyectil.fisicas.suelo = False
+        try:
+            proyectil.graficos.clearTrayectoria()
+        except Exception:
+            pass
 
-def lanzarTodos():
-    proyectilv1.fisicas.lanzamientoCA(angulo)
-    proyectilv2.fisicas.lanzamientoCA(angulo)
+def lanzarActivo():
+    if active_proyectil is not None:
+        active_proyectil.fisicas.lanzamientoCA(angulo)
 
 class proyectil:#separacion en clases, procesar por separado las fisicas y los graficos, luego se unen con una clase principal
     def __init__(self,screen,x,y,width,height,masa,color,img):
         self.screen = screen
         self.posicion = pygame.math.Vector2(x,y)
+        self.initial_posicion = pygame.math.Vector2(x,y)
         self.tamaño = pygame.math.Vector2(width,height)
         self.masa = masa
         self.color = color
         self.img = pygame.transform.scale(img, (self.tamaño.x*(escala), self.tamaño.y*(escala))) if img else False
 
+        global active_proyectil
         self.fisicas = fsproyecctil(self.posicion,self.tamaño,self.masa,self.screen)
         self.graficos = grproyectil(self.color,escala)
+        proyectiles.append(self)
+        active_proyectil = self
     def draw(self):
-
-        if self.img:
-            if lanzar.boton_state:
-                self.graficos.dibujarConImagen(self.screen,self.fisicas.actualizar(),self.tamaño,self.img)
+        if lanzar.boton_state:
+            pos = self.fisicas.actualizar()
+            if self.img:
+                self.graficos.dibujarConImagen(self.screen, pos, self.tamaño, self.img)
             else:
-                self.graficos.dibujarConImagen(self.screen,self.posicion,self.tamaño,self.img)
+                self.graficos.dibujar(self.screen, pos, self.tamaño, self.color)
+            self.graficos.dibujarTrayectoria(self.screen, pos)
         else:
-            if lanzar.boton_state:
-                self.graficos.dibujar(self.screen,self.fisicas.actualizar(),self.tamaño,self.color)
+            if self.img:
+                self.graficos.dibujarConImagen(self.screen, self.posicion, self.tamaño, self.img)
             else:
-                self.graficos.dibujar(self.screen,self.posicion,self.tamaño,self.color)
+                self.graficos.dibujar(self.screen, self.posicion, self.tamaño, self.color)
     
 class fsproyecctil:
     def __init__ (self,posicion,tamaño,masa,mundo):
@@ -88,10 +99,11 @@ class fsproyecctil:
 
         if not self.suelo:
             self.velocidad.y += gravedad*dtime
+            self.velocidad.x -= viento*dtime
 
         if self.posicion.y + self.tamaño.y >= limite_suelo:
             self.posicion.y = limite_suelo - self.tamaño.y
-            #self.velocidad.y = 0
+            self.velocidad.x = 0
             self.suelo = True
         else:
             self.suelo = False
@@ -107,30 +119,49 @@ class grproyectil:
     def __init__(self,color,escala):
         self.color = color
         self.escala = escala
+        self.trayectoria = []
+        self.sample_spacing = 6
     def dibujar(self,screen,posicion,tamaño,color):
         pygame.draw.rect(screen,color,rect=[posicion.x*self.escala,posicion.y*self.escala,tamaño.x*self.escala,tamaño.y*self.escala])
+        
+    def dibujarTrayectoria(self, screen, posicion):
+        px = int(posicion.x * self.escala)
+        py = int(posicion.y * self.escala)
+        if not self.trayectoria:
+            self.trayectoria.append((px, py))
+        else:
+            lx, ly = self.trayectoria[-1]
+            dx = px - lx
+            dy = py - ly
+            if dx*dx + dy*dy >= self.sample_spacing * self.sample_spacing:
+                self.trayectoria.append((px, py))
+        for tx, ty in self.trayectoria:
+            pygame.draw.rect(screen, (250, 0, 0), (tx, ty, 2, 2))
+
+    def clearTrayectoria(self):
+        self.trayectoria.clear()
 
     def dibujarConImagen(self,screen,posicion,tamaño,img):
         rect = (posicion.x*self.escala,posicion.y*self.escala)
         screen.blit(img, rect)
 
 
-
+proyectilv3 = proyectil(screen, 0, 45, 4, 4, 1, (250, 0, 0),imgnave)
 proyectilv1 = proyectil(screen,0,45,4,4,1,(250,0,0),imghumano)#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
-proyectilv2 = proyectil(screen,0,45,4,4,2,(0,0,250),imgpiedra)
-lanzar = widgets.boton(screen,1, 1, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),reiniciar,lanzarTodos)
-
+#proyectilv2 = proyectil(screen,0,45,4,4,2,(0,0,250),imgpiedra)
+lanzar = widgets.boton(screen,1, 1, 150, 50, (0, 250, 0),(250, 0, 0), "Lanzar","Parar", (255, 255, 255),reiniciar,lanzarActivo)
 
 
 while running:
     screen.fill((250,250,250))
     dtime = 1/time.get_fps() if time.get_fps() >0 else 0
 
-    proyectilv1.draw()
-    proyectilv2.draw()
+    for proyectil in proyectiles:
+        proyectil.draw()
 
     lanzar.dibujar()
     lanzar.position_resize()
+
 
 
     pygame.display.flip()
@@ -157,6 +188,13 @@ while running:
             if event.key == pygame.K_d:
                 angulo -= 5
                 print(f"Valor del angulo : ", angulo)
+            if event.key == pygame.K_w:
+                viento += 1
+                print(f"Valor del viento : ", viento)
+            if event.key == pygame.K_s:
+                viento -= 1
+                print(f"Valor del viento : ", viento)
+                
         lanzar.presionado(event)
 
         if event.type == pygame.QUIT:
