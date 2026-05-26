@@ -28,8 +28,11 @@ imgnave = pygame.image.load("assets/img/nave.png").convert_alpha()
 pygame.display.set_icon(imgnave)
 
 #vairables de lanzamiento con inferencia global
-angulo = 45 #angulo de lanzamiento
-newtons = 10 #fuerza de lanzamiento
+params = {
+    "angulo": 45,
+    "newtons": 10
+}
+
 #son para evitar que se tengan que realizar multiples barras para cambio de variables
 #estas versiones de la variables globales permiten tener una sola barra para cambiar el valor de las locales que son la que eestan en las clasesd
 
@@ -52,11 +55,11 @@ def reiniciar ():
 
 def lanzarTodos():
     for proyectil in proyectiles:
-        proyectil.fisicas.lanzamientoCA(angulo)
+        proyectil.fisicas.lanzamientoCA()
 
 def lanzarActivo():
     if active_proyectil is not None:
-        active_proyectil.fisicas.lanzamientoCA(angulo)
+        active_proyectil.fisicas.lanzamientoCA()
 
 
 
@@ -80,13 +83,16 @@ class proyectil:#separacion en clases, procesar por separado las fisicas y los g
 
         self.fisicas = fsproyecctil(self.posicion,self.tamaño,self.masa,self.screen)
         self.graficos = grproyectil(self.color,escala)
+        self.runningFisica = False
 
         global active_proyectil
         active_proyectil = self
+    def actualizarFisica(self,val):
+        self.runningFisica = val
 
     def draw(self):
 
-        if lanzar.boton_state:
+        if self.runningFisica:
             pos = self.fisicas.actualizar()
             if self.img:
                 self.graficos.dibujarConImagen(self.screen, pos, self.tamaño, self.img, self.border)
@@ -108,6 +114,8 @@ class proyectil:#separacion en clases, procesar por separado las fisicas y los g
                         proyectiles[i].border = False
                         proyectiles[i].select = False
                     print ("proyectil presionado")
+                    params["angulo"] = self.fisicas.angulo
+                    params["newtons"] = self.fisicas.fuerza
                     if self.select:
                         self.border = False
                         self.select = False
@@ -116,6 +124,10 @@ class proyectil:#separacion en clases, procesar por separado las fisicas y los g
                         self.border = True
                         self.select = True
                         print("edicion activada para proyectil ")
+        if self.select:
+            self.fisicas.angulo = params["angulo"]
+            self.fisicas.fuerza = params["newtons"]
+            
 
 class fsproyecctil:
     def __init__ (self,posicion,tamaño,masa,mundo):
@@ -125,13 +137,16 @@ class fsproyecctil:
         self.mundo = mundo# el mundo es la pantalla pero desde la perspectiva fisica
         self.suelo = False
         self.velocidad = pygame.math.Vector2(0,0)
+        #Para el lanzamiento
+        self.angulo = 0
+        self.fuerza = 0
 
 
-    def lanzamientoCA (self,angulo):
-        print("lanzamiento ejecutado con angulo: ", angulo)
-        angulo = math.radians(angulo)
-        vx = (newtons / self.masa) * math.cos(angulo)
-        vy = (newtons / self.masa) * math.sin(angulo)
+    def lanzamientoCA (self):
+        print("lanzamiento ejecutado con angulo: ", self.angulo)
+        angulo = math.radians(self.angulo)
+        vx = (self.fuerza / self.masa) * math.cos(angulo)
+        vy = (self.fuerza / self.masa) * math.sin(angulo)
         print ("velocidad en x: ",vx)
         print("velocidad en y:", vy)
         self.velocidad.x += vx
@@ -221,11 +236,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:    
-                newtons += 1
-                print(f"Valor de fuerza: {newtons}")
+                params["newtons"] += 1
+                print(f"Valor de fuerza: {params['newtons']}")
             if event.key == pygame.K_DOWN:  
-                newtons -= 1
-                print(f"Valor de fuerza: {newtons}")
+                params["newtons"] -= 1
+                print(f"Valor de fuerza: {params['newtons']}")
             if event.key == pygame.K_RIGHT:    
                 gravedad += 1
                 print(f"Valor de gravedad: {gravedad}")
@@ -233,11 +248,11 @@ while running:
                 gravedad -= 1
                 print(f"Valor de gravedad: {gravedad}")
             if event.key == pygame.K_a:
-                angulo += 5
-                print(f"Valor del angulo : ", angulo)
+                params["angulo"] += 5
+                print(f"Valor del angulo : ", params["angulo"])
             if event.key == pygame.K_d:
-                angulo -= 5
-                print(f"Valor del angulo : ", angulo)
+                params["angulo"] -= 5
+                print(f"Valor del angulo : ", params["angulo"])
             if event.key == pygame.K_w:
                 viento += 1
                 print(f"Valor del viento : ", viento)

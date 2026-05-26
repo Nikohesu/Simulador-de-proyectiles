@@ -273,6 +273,7 @@ class PlanetSelector:
         self.planet_imgs  = planet_imgs
         self.selected     = selected
         self.hovered      = None
+        self.active       = True   # False → ignora todos los eventos
 
         # Centrar el bloque de tarjetas horizontalmente
         n            = len(self.planet_names)
@@ -291,6 +292,9 @@ class PlanetSelector:
 
     def handle_event(self, event):
         """Actualiza hover/selección. Devuelve nombre clickeado o None."""
+        if not self.active:
+            return None
+
         if event.type == pygame.MOUSEMOTION:
             self.hovered = None
             for i, rect in enumerate(self._rects):
@@ -355,7 +359,7 @@ class PlanetSelector:
 # ══════════════════════════════════════════════════════════════
 
 class ControlPanel:
-    def __init__(self, x, y, titulo, valor_inicial, paramCambio, unidad, callback_cambio, manager, panel=None):
+    def __init__(self, x, y, titulo, valor_inicial, paramCambio, unidad, callback_cambio, manager, panel=None, width = 400):
         """
         :param x, y:            Posición del panel en pantalla.
         :param titulo:          Texto del encabezado (ej. "GRAVEDAD").
@@ -371,7 +375,7 @@ class ControlPanel:
         self.paramCambio = paramCambio#para actualizar al cambiar un planeta
         self.panel = panel #si se pasa un panel, se usan sus coordenadas relativas; sino, se crean nuevos con coordenadas absolutas
 
-        self.tWidth = 400
+        self.tWidth = width
         self.tHeight = 100
 
         # Contenedor del panel
@@ -382,6 +386,7 @@ class ControlPanel:
             )
         else:
             # Si se pasa un panel existente, se usan sus coordenadas relativas
+            print (self.tWidth)
             self.panel = pygame_gui.elements.UIPanel(
                 relative_rect=pygame.Rect((x, y), (self.tWidth, self.tHeight)),
                 manager=manager,
@@ -407,7 +412,7 @@ class ControlPanel:
 
         # Botón restar
         self.bton_menos = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((280, 30), (40, 40)),
+            relative_rect=pygame.Rect((240, 30), (40, 40)),
             text="-",
             manager=manager,
             container=self.panel,
@@ -415,7 +420,7 @@ class ControlPanel:
 
         # Botón sumar
         self.bton_mas = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((335, 30), (40, 40)),
+            relative_rect=pygame.Rect((280, 30), (40, 40)),
             text="+",
             manager=manager,
             container=self.panel,
@@ -463,12 +468,16 @@ def actualizar_viento(nuevo_valor):
 
 def build_controls(manager, params):
     cx = WIDTH // 2
-    x0 = cx - CP_WIDTH // 2 #centro del centro jaja
 
-    gravedad_panel = ControlPanel(cx , 350, "Gravedad (m/s²)", params["gravedad"],"gravedad", "m/s²", actualizar_gravedad, manager)
-    viento_panel = ControlPanel(cx , 475, "Viento (m/s)", params["velocidad_del_viento"], "velocidad_del_viento", "m/s", actualizar_viento, manager)
+    # ControlPanel crea un sub-panel de tWidth=400 px.
+    # Pasando cx como x y dejando que el constructor haga x - tWidth/2
+    # el panel queda centrado en pantalla.
+    gravedad_panel = ControlPanel(cx, 350, "Gravedad (m/s²)", params["gravedad"],
+                                  "gravedad", "m/s²", actualizar_gravedad, manager)
+    viento_panel   = ControlPanel(cx, 475, "Viento (m/s)",    params["velocidad_del_viento"],
+                                  "velocidad_del_viento", "m/s", actualizar_viento, manager)
 
-
+    x0 = cx - CP_WIDTH // 2
 
     # ── Botón continuar ────────────────────────
     button_continue = pygame_gui.elements.UIButton(
@@ -485,27 +494,140 @@ def build_controls(manager, params):
     )
 
     return {
-        "gravedad_panel": gravedad_panel,
-        "viento_panel": viento_panel,
+        "gravedad_panel":  gravedad_panel,
+        "viento_panel":    viento_panel,
         "button_continue": button_continue,
-        "status_label":   status_label,
+        "status_label":    status_label,
     }
 
 
 
 def panelDeParametros(manager):
-    cx = 0 #totalmente a la izquierda
+    """Panel izquierdo de la pantalla de inicio (no usado activamente)."""
+    cx = 0
     angulo = ControlPanel(cx , 350, "Gravedad", params["gravedad"],"gravedad", "m/s²", actualizar_gravedad, manager)
     fuerza = ControlPanel(cx , 475, "Viento (m/s)", params["velocidad_del_viento"], "velocidad_del_viento", "m/s", actualizar_viento, manager)
 
 
+# ══════════════════════════════════════════════════════════════
+# PANEL LATERAL DE SIMULACIÓN
+# Ancho fijo de 500 px, pegado al borde izquierdo.
+# Contiene: ángulo, fuerza, cantidad de proyectiles y
+# tres botones de acción (Lanzar, Pausar, Reiniciar).
+# ══════════════════════════════════════════════════════════════
+SIM_PANEL_W = 400
+
+# Dimensiones de los botones de acción
+SIM_BTN_W   = 440
+SIM_BTN_H   = 52
+SIM_BTN_IMG = 48   # tamaño reservado para icono a la izquierda
+SIM_BTN_GAP = 12   # separación vertical entre botones
+
+def actualizar_angulo(nuevo_valor):
+    global params
+    print(f"Ángulo actualizado: {params['angulo']:.1f}°")
+
+def actualizar_fuerza(nuevo_valor):
+    global params
+    print(f"Fuerza actualizada: {params['newtons']:.1f} N")
+
+def actualizar_proyectiles(nuevo_valor):
+    global params
+    print(f"Proyectiles en pantalla: {params['proyectiles']:.0f}")
+
+
 def simulacion(manager):
+    """Crea y devuelve todos los widgets del panel lateral de simulación."""
+
+    # ── Panel contenedor principal ─────────────────────────────
     panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect((0, 0), (500, HEIGHT)),
-            manager=manager, object_id="#panel_simlacion"
-        )
-    panel_de_angulo = ControlPanel(0 , 0, "Ángulo", params["angulo"],"angulo", "°", lambda x: print(f"Ángulo actualizado: {x:.1f}°"), manager, panel = panel)
-    panel_de_fuerza = ControlPanel(0 , 125, "Fuerza", params["newtons"],"newtons", "N", lambda x: print(f"Fuerza actualizada: {x:.1f} N"), manager, panel = panel)
+        relative_rect=pygame.Rect((0, 0), (SIM_PANEL_W, HEIGHT)),
+        manager=manager,
+        object_id="#panel_simulacion",
+    )
+
+    panel_w = SIM_PANEL_W  # 500 px
+
+    # ── Subpanel de ángulo  (centrado dentro del panel) ────────
+    # ControlPanel crea un sub-UIPanel de tWidth=400 px.
+    # Para centrarlo: x = (panel_w - 400) // 2 = 50
+    sub_x = (panel_w - 350) // 2   # 50
+
+    panel_angulo = ControlPanel(
+        sub_x, 30,
+        "Ángulo", params["angulo"],
+        "angulo", "°",
+        actualizar_angulo,
+        manager,
+        panel=panel,
+        width = 350
+    )
+     # ajustar ancho para que quede centrado dentro del panel
+
+    panel_fuerza = ControlPanel(
+        sub_x, 155,
+        "Fuerza", params["newtons"],
+        "newtons", "N",
+        actualizar_fuerza,
+        manager,
+        panel=panel,
+        width = 350
+    )
+
+    panel_proyectiles = ControlPanel(
+        sub_x, 280,
+        "Proyectiles", params["proyectiles"],
+        "proyectiles", "uds",
+        actualizar_proyectiles,
+        manager,
+        panel=panel,
+        width = 350
+    )
+
+    # ── Botones de acción (Lanzar / Pausar / Reiniciar) ────────
+    btn_x  = (panel_w - SIM_BTN_W) // 2   # 30
+    btn_y0 = 415
+
+    btn_lanzar = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((btn_x+50, btn_y0), (SIM_BTN_W-100, SIM_BTN_H)),
+        text="    🚀  Lanzar",
+        manager=manager,
+        container=panel,
+        object_id="#btn_lanzar",
+    )
+
+    btn_pausar = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((btn_x+50, btn_y0 + SIM_BTN_H + SIM_BTN_GAP), (SIM_BTN_W-100, SIM_BTN_H)),
+        text="    ⏸  Pausar",
+        manager=manager,
+        container=panel,
+        object_id="#btn_pausar",
+    )
+
+    btn_reiniciar = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((btn_x+50, btn_y0 + 2 * (SIM_BTN_H + SIM_BTN_GAP)), (SIM_BTN_W-100, SIM_BTN_H)),
+        text="    🔄  Reiniciar",
+        manager=manager,
+        container=panel,
+        object_id="#btn_reiniciar",
+    )
+    print("repitiendo creacion")
+
+    """"Implementacion del simulador, de aqui hasta el return se encuentran las funciones encargadas de ejecutar fisicas y graficos de la simulacion"""
+    proyectiles.append(proyectil(screen,45,30,4,4,1,(250,0,0),imghumano))#inicializo el v1 (pantalla,x(metro respecto al origen),y(metros respecto al origen),width(m),height(m),masa(kg),)
+    proyectiles.append(proyectil(screen,30,45,4,4,2,(0,0,250),imgpiedra))
+    proyectiles.append(proyectil(screen, 15, 45, 4, 4, 1, (250, 0, 0),imgnave))
+
+    return {
+        "panel":              panel,
+        "panel_angulo":       panel_angulo,
+        "panel_fuerza":       panel_fuerza,
+        "panel_proyectiles":  panel_proyectiles,
+        "btn_lanzar":         btn_lanzar,
+        "btn_pausar":         btn_pausar,
+        "btn_reiniciar":      btn_reiniciar,
+    }
+
 
 # ══════════════════════════════════════════════════════════════
 # BUCLE PRINCIPAL
@@ -514,10 +636,192 @@ def simulacion(manager):
 #   eventos → update → draw
 # Al presionar Continuar con campos válidos, retorna params.
 # ══════════════════════════════════════════════════════════════
+def reiniciar ():
+        for proyectil in proyectiles:
+            """proyectiles[i].fisicas.posicion = pygame.math.Vector2(0,45)
+            proyectiles[i].fisicas.velocidad = pygame.math.Vector2(0,0)
+            proyectiles[i].posicion = pygame.math.Vector2(0,45)"""
+
+            proyectil.posicion = proyectil.initial_posicion.copy()
+            proyectil.fisicas.posicion = proyectil.posicion
+            proyectil.fisicas.velocidad = pygame.math.Vector2(0,0)
+            proyectil.fisicas.suelo = False
+            try:
+                proyectil.graficos.clearTrayectoria()
+            except Exception:
+                pass    
+def lanzarTodos():
+    for proyectil in proyectiles:
+        proyectil.fisicas.lanzamientoCA()
+
+def lanzarActivo():
+    if active_proyectil is not None:
+        active_proyectil.fisicas.lanzamientoCA()
+escala = 10 #10 pixeles equivale a 1 metro
+proyectiles = []
+active_proyectil = None
+runningFisica = False
+
+class proyectil:#separacion en clases, procesar por separado las fisicas y los graficos, luego se unen con una clase principal
+    def __init__(self,screen,x,y,width,height,masa,color,img):
+        self.screen = screen
+        self.posicion = pygame.math.Vector2(x,y)
+        self.tamaño = pygame.math.Vector2(width,height)
+        self.masa = masa
+        self.color = color
+        self.img = pygame.transform.scale(img, (self.tamaño.x*(escala), self.tamaño.y*(escala))) if img else False
+
+        self.rect = pygame.Rect(self.posicion.x*escala,self.posicion.y*escala,self.tamaño.x*escala,self.tamaño.y*escala)
+
+        self.initial_posicion = pygame.math.Vector2(x,y)
+        #son para verificar sie el proyectil esta seleccionado
+        self.border = False
+        self.select = False
+
+        #variables de lanzamiento que se editan en el lanzamiento
+
+        self.fisicas = fsproyecctil(self.posicion,self.tamaño,self.masa,self.screen)
+        self.graficos = grproyectil(self.color,escala)
+        self.runningFisica = False
+
+        global active_proyectil
+        active_proyectil = self
+        print ("proyectil creado con posicion: ", self.posicion, " y masa: ", self.masa)
+    def actualizarFisica(self,val):
+        self.runningFisica = val
+
+    def draw(self):
+
+        if self.runningFisica:
+            pos = self.fisicas.actualizar()
+            if self.img:
+                self.graficos.dibujarConImagen(self.screen, pos, self.tamaño, self.img, self.border)
+            else:
+                self.graficos.dibujar(self.screen, pos, self.tamaño, self.color,self.border)
+            self.graficos.dibujarTrayectoria(self.screen, pos)
+        else:
+            if self.img:
+                self.graficos.dibujarConImagen(self.screen, self.posicion, self.tamaño, self.img,self.border)
+            else:
+                self.graficos.dibujar(self.screen, self.posicion, self.tamaño, self.color,self.border)
+
+
+    def seleccionar(self,event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.rect.collidepoint(event.pos):
+                    for i in range(len(proyectiles)):
+                        proyectiles[i].border = False
+                        proyectiles[i].select = False
+                    print ("proyectil presionado")
+                    params["angulo"] = self.fisicas.angulo
+                    params["newtons"] = self.fisicas.fuerza
+                    if self.select:
+                        self.border = False
+                        self.select = False
+                        print("edicion desactivada para proyectil ")
+                    else :
+                        self.border = True
+                        self.select = True
+                        print("edicion activada para proyectil ")
+        if self.select:
+            self.fisicas.angulo = params["angulo"]
+            self.fisicas.fuerza = params["newtons"]
+            
+
+class fsproyecctil:
+    def __init__ (self,posicion,tamaño,masa,mundo):
+        self.posicion = posicion
+        self.tamaño = tamaño
+        self.masa = masa
+        self.mundo = mundo# el mundo es la pantalla pero desde la perspectiva fisica
+        self.suelo = False
+        self.velocidad = pygame.math.Vector2(0,0)
+        #Para el lanzamiento
+        self.angulo = 0
+        self.fuerza = 0
+
+
+    def lanzamientoCA (self):
+        print("lanzamiento ejecutado con angulo: ", self.angulo)
+        angulo = math.radians(self.angulo)
+        vx = (self.fuerza / self.masa) * math.cos(angulo)
+        vy = (self.fuerza / self.masa) * math.sin(angulo)
+        print ("velocidad en x: ",vx)
+        print("velocidad en y:", vy)
+        self.velocidad.x += vx
+        self.velocidad.y -= vy
+        self.suelo = False
+
+
+    def apigravedad(self):#estoy pensando en separar las principales caracteristicas fisicar en distintos modulos para mejor depuracion del simulardor
+        limite_suelo = self.mundo.get_height() / escala
+
+        if not self.suelo:
+            self.velocidad.y += params["gravedad"]*time_delta
+            self.velocidad.x -= params["viento"]*time_delta
+
+        if self.posicion.y + self.tamaño.y >= limite_suelo:
+            self.posicion.y = limite_suelo - self.tamaño.y
+            self.velocidad.x = 0
+            self.suelo = True
+        else:
+            self.suelo = False
+
+    def act_posicion (self):#funcion que actualiza las posiciones segun la velocidad actual
+        self.posicion += self.velocidad*time_delta
+
+    def actualizar(self):#Aqui solo van actualizaciones con velocidad o aceleracion contantes
+        self.apigravedad()
+        self.act_posicion()
+        return self.posicion
+    
+    
+class grproyectil:
+    def __init__(self,color,escala):
+        self.color = color
+        self.escala = escala
+        self.trayectoria = []
+        self.sample_spacing = 6
+
+    def dibujar(self,screen,posicion,tamaño,color):
+        pygame.draw.rect(screen,color,rect=[posicion.x*self.escala,posicion.y*self.escala,tamaño.x*self.escala,tamaño.y*self.escala])
+
+    def dibujarConImagen(self,screen,posicion,tamaño,img,border):
+        rect = (posicion.x*self.escala,posicion.y*self.escala)
+        screen.blit(img, rect)
+        if border:
+            pygame.draw.rect(screen,(255,0,0),rect=[posicion.x*self.escala,posicion.y*self.escala,tamaño.x*self.escala,tamaño.y*self.escala],width=4)
+
+    def dibujarTrayectoria(self, screen, posicion):
+        px = int(posicion.x * self.escala)
+        py = int(posicion.y * self.escala)
+        if not self.trayectoria:
+            self.trayectoria.append((px, py))
+        else:
+            lx, ly = self.trayectoria[-1]
+            dx = px - lx
+            dy = py - ly
+            if dx*dx + dy*dy >= self.sample_spacing * self.sample_spacing:
+                self.trayectoria.append((px, py))
+        for tx, ty in self.trayectoria:
+            pygame.draw.rect(screen, self.color, (tx, ty, 2, 2))
+
+    def clearTrayectoria(self):
+        self.trayectoria.clear()
+
+
 def main():
+    global screen, imghumano, imgpiedra, imgnave
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption(TITLE)
+    imghumano = pygame.image.load("assets/img/humano.png").convert_alpha()
+    imgpiedra = pygame.image.load("assets/img/piedra.png").convert_alpha()
+    imgnave = pygame.image.load("assets/img/nave.png").convert_alpha()
+    pygame.display.set_caption("Simulador de Proyectiles")
+    pygame.display.set_icon(imgnave)
+
     clock   = pygame.time.Clock()
     manager = pygame_gui.UIManager((WIDTH, HEIGHT),"theme.json")  # tema personalizado 
 
@@ -536,61 +840,81 @@ def main():
         "velocidad_del_viento": DEFAULT_VIENTO,
 
         #parametros por objeto
-        "angulo": 0,#angulo de lanzamiento
-        "newtons": 0,#fuerza de lanzamiento
-        "masa": 0,#masa del proyectil
-        #estos son globales y van a cambiar cada vez que se seleccione un proyectil nuevo
+        "angulo": 0,       # ángulo de lanzamiento
+        "newtons": 0,      # fuerza de lanzamiento
+        "masa": 0,         # masa del proyectil
+        "proyectiles": 1,  # cantidad de proyectiles en pantalla
     }
 
 
     selector = PlanetSelector(planet_imgs, params["planet"])
     widgets  = build_controls(manager, params)
+    sim_widgets = None   # se crea una sola vez al pasar a simulación
 
     runningHome = True
     runningSimulacion = False
 
-    # ── Bucle de eventos 
-    #encargado de elminar elmentos de la pantalla de inicio para mostrar los de simulacion
-    def kill_all(elements):
-        for el in elements:
-            if el is not None:
-                widgets[el].kill()
-
-
+    # ── Bucle de eventos ──────────────────────────────────────
     running = True
     while running:
+        global time_delta
         time_delta    = clock.tick(FPS) / 1000.0
         time_elapsed += time_delta
-        
 
-
-        #capturando eventos de todo
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            # Selector: hover + click de tarjeta
-            #selector de los planetas
+            # Selector de planetas (solo activo en pantalla de inicio)
             clicked = selector.handle_event(event)
             if clicked:
                 params["planet"] = clicked
                 print(f"Planeta seleccionado: {clicked}")
                 params["gravedad"] = PLANETS[clicked]["g"]
-            #CLIKED ES el nombre de la varible que representa la presionada en cierto momento
 
-            # Botón Continuar: validar y retornar
+            # Botón Continuar
             if (event.type == pygame_gui.UI_BUTTON_PRESSED
                     and event.ui_element == widgets["button_continue"]):
-                # se quita la validacion porque se limitan los valores a los que se puede acoger el usuario
-                print ("Continuar presionado, iniciando simulacion.....")
-                runningHome = False
+                print("Continuar presionado, iniciando simulacion.....")
+
+                # Desactivar selector para que no siga capturando clics
+                selector.active = False
+
+                # Destruir widgets de la pantalla de inicio
+                widgets["gravedad_panel"].kill()
+                widgets["viento_panel"].kill()
+                widgets["button_continue"].kill()
+                widgets["status_label"].kill()
+
+                runningHome       = False
                 runningSimulacion = True
 
-            manager.process_events(event)
+                # Crear widgets de simulación UNA SOLA VEZ
+                sim_widgets = simulacion(manager)
 
-            #paneles de control
-            widgets["gravedad_panel"].procesar_evento(event)
-            widgets["viento_panel"].procesar_evento(event)
+            # Eventos para los paneles de la pantalla de inicio
+            if runningHome:
+                widgets["gravedad_panel"].procesar_evento(event)
+                widgets["viento_panel"].procesar_evento(event)
+
+            # Eventos para los paneles de la pantalla de simulación
+            if runningSimulacion and sim_widgets:
+                sim_widgets["panel_angulo"].procesar_evento(event)
+                sim_widgets["panel_fuerza"].procesar_evento(event)
+                sim_widgets["panel_proyectiles"].procesar_evento(event)
+                for i in range(len(proyectiles)):
+                    proyectiles[i].draw()
+                    proyectiles[i].seleccionar(event)
+
+                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == sim_widgets["btn_lanzar"]:
+                        print("▶ Lanzar")
+                    elif event.ui_element == sim_widgets["btn_pausar"]:
+                        print("⏸ Pausar")
+                    elif event.ui_element == sim_widgets["btn_reiniciar"]:
+                        print("🔄 Reiniciar")
+
+            manager.process_events(event)
 
         manager.update(time_delta)
 
@@ -599,21 +923,9 @@ def main():
 
         if runningHome:
             draw_title(screen, font_title)
-            selector.draw(screen) 
+            selector.draw(screen)
 
-
-        if runningSimulacion:
-            #eliminar widgets de la pantalla de inicio
-            widgets["gravedad_panel"].kill()
-            widgets["viento_panel"].kill()
-            widgets["button_continue"].kill()
-            widgets["status_label"].kill()
-            
-            #agregar nuevos widgets para la pantalla de simulacion
-            simulacion(manager)
-
-        manager.draw_ui(screen)  # widgets pygame_gui
-
+        manager.draw_ui(screen)
         pygame.display.flip()
 
     pygame.quit()

@@ -1,0 +1,240 @@
+{
+  "_comentario": "theme.json — Todos los estilos visuales del simulador. Dos secciones: 'custom' (leída por main_screen.py para pygame manual) y las claves de pygame_gui (leídas por UIManager).",
+
+  "custom": {
+    "_comentario": "Estilos para elementos dibujados con pygame puro (no pygame_gui). main_screen.py lee esta sección al inicio.",
+
+    "window": {
+      "background_color": [5, 5, 18]
+    },
+
+    "stars": {
+      "radius_min": 1,
+      "radius_max": 3,
+      "alpha_min":  140,
+      "alpha_max":  255
+    },
+
+    "title": {
+      "font_family":      "Arial",
+      "font_size":        42,
+      "bold":             true,
+      "color":            [200, 220, 255],
+      "y":                10,
+      "divider_color":    [80, 120, 220],
+      "divider_y":        68,
+      "divider_half_w":   300,
+      "divider_thickness": 2
+    },
+
+    "planet_selector": {
+      "title_color":       [180, 210, 255],
+      "title_font_size":   22,
+      "name_font_size":    16,
+      "fallback_color":    [150, 150, 160],
+      "underline_half_w":  30,
+      "underline_thickness": 2,
+
+      "card": {
+        "normal_bg":      [20,  30,  60],
+        "normal_border":  [50,  80,  140],
+        "hover_bg":       [30,  50,  90],
+        "hover_border":   [100, 160, 255],
+        "selected_bg":    [20,  60,  120],
+        "selected_border":[80,  200, 255],
+        "name_normal":    [180, 200, 240],
+        "name_selected":  [80,  200, 255]
+      }
+    }
+  },
+
+  "defaults": {
+    "colours": {
+      "normal_bg":       "#0d1a3a",
+      "hovered_bg":      "#1a3060",
+      "active_bg":       "#1a4080",
+      "disabled_bg":     "#0a1020",
+      "dark_bg":         "#07101f",
+      "normal_text":     "#b4c8f0",
+      "hovered_text":    "#ddeeff",
+      "active_text":     "#ffffff",
+      "disabled_text":   "#445566",
+      "selected_text":   "#ffffff",
+      "normal_border":   "#2a4a8a",
+      "hovered_border":  "#4a7aff",
+      "active_border":   "#50c8ff",
+      "disabled_border": "#1a2a3a",
+      "text_cursor":     "#50c8ffff"
+    },
+    "font": {
+      "name":   "arial",
+      "size":   "15",
+      "bold":   "0",
+      "italic": "0"
+    }
+  },
+
+  "label": {
+    "colours": {
+      "dark_bg":     "#00000000",
+      "normal_text": "#b4c8f0"
+    },
+    "misc": {
+      "text_shadow_size": "0"
+    }
+  },
+
+  "#lbl_panel_title": {
+    "colours": {
+      "dark_bg":     "#00000000",
+      "normal_text": "#c8dcff"
+    },
+    "font": {
+      "name": "arial",
+      "size": "18",
+      "bold": "1"
+    }
+  },
+
+  "#lbl_campo": {
+    "colours": {
+      "dark_bg":     "#00000000",
+      "normal_text": "#8aaad8"
+    },
+    "font": {
+      "name": "arial",
+      "size": "14",
+      "bold": "0"
+    }
+  },
+
+  "#lbl_status": {
+    "colours": {
+      "dark_bg":     "#00000000",
+      "normal_text": "#607090"
+    },
+    "font": {
+      "name":   "arial",
+      "size":   "13",
+      "italic": "1"
+    }
+  },
+
+  "#title": {
+    "colours": {
+      "dark_bg":     "#00000000",
+      "normal_text": "#a0c0ff"
+    },
+    "font": {
+      "name": "arial",
+      "size": "13",
+      "bold": "1"
+    }
+  },
+
+    "text_entry_line": {
+    "colours": {
+      "dark_bg":      "#0a1828",
+      "normal_bg":    "#0d1e36",
+      "active_bg":    "#122040",
+      "normal_text":  "#c8dcff",
+      "active_text":  "#ffffff",
+      "normal_border": "#1e3a6a",
+      "active_border": "#50c8ff",
+      "text_cursor":   "#50c8ffff"
+    },
+    "font": {
+      "name": "arial",
+      "size": "16"
+    },
+    "misc": {
+      "shape":               "rounded_rectangle",
+      "shape_corner_radius": "6",
+      "border_width":        "2",
+      "shadow_width":        "0",
+      "padding":             "4,4"
+    }
+  },
+
+  "button": {
+    "colours": {
+      "normal_bg":      "#0d2050",
+      "hovered_bg":     "#1a3a80",
+      "active_bg":      "#1050a0",
+      "disabled_bg":    "#0a1428",
+      "normal_text":    "#b4c8f0",
+      "hovered_text":   "#ffffff",
+      "active_text":    "#ffffff",
+      "disabled_text":  "#3a5070",
+      "normal_border":  "#2a50a0",
+      "hovered_border": "#50a0ff",
+      "active_border":  "#50c8ff"
+    },
+    "font": {
+      "name": "arial",
+      "size": "15",
+      "bold": "0"
+    },
+    "misc": {
+      "shape":               "rounded_rectangle",
+      "shape_corner_radius": "8",
+      "border_width":        "2",
+      "shadow_width":        "2"
+    }
+  },
+
+  "#btn_continuar": {
+    "colours": {
+      "normal_bg":      "#0a3060",
+      "hovered_bg":     "#1050a0",
+      "active_bg":      "#1a70c0",
+      "normal_text":    "#c8e8ff",
+      "hovered_text":   "#ffffff",
+      "active_text":    "#ffffff",
+      "normal_border":  "#2060c0",
+      "hovered_border": "#50c8ff",
+      "active_border":  "#80e0ff"
+    },
+    "font": {
+      "name": "arial",
+      "size": "18",
+      "bold": "1"
+    },
+    "misc": {
+      "shape":               "rounded_rectangle",
+      "shape_corner_radius": "10",
+      "border_width":        "2",
+      "shadow_width":        "3"
+    }
+  },
+
+  "panel": {
+    "colours": {
+      "dark_bg":       "#0a182400",
+      "normal_border": "#1e3a6a"
+    },
+    "misc": {
+      "shape":               "rounded_rectangle",
+      "shape_corner_radius": "12",
+      "border_width":        "2",
+      "shadow_width":        "0"
+    }
+  },
+
+  "=== REFERENCIA RÁPIDA ===": {
+
+    "object_ids": "Declarar en el widget con object_id='#mi_id'. Usar como clave directa en theme.json. Targeting compuesto: 'tipo.#id' o '#padre.tipo_hijo'.",
+
+    "colours": "normal_bg · hovered_bg · active_bg · disabled_bg · dark_bg | normal_text · hovered_text · active_text · disabled_text · selected_text | normal_border · hovered_border · active_border · disabled_border | text_cursor (#RRGGBBaa con alpha)",
+
+    "misc_shape": "shape: 'rectangle' | 'rounded_rectangle' | 'ellipse' — shape_corner_radius: px como string — border_width: px — shadow_width: px (0 = sin sombra)",
+
+    "misc_text": "text_horiz_alignment: 'left'|'centre'|'right' — text_vert_alignment: 'top'|'centre'|'bottom' — text_shadow_size: '0' — padding: 'horiz,vert'",
+
+    "font": "name: nombre del sistema ('arial', 'verdana') — size: string ('16') — bold: '1'|'0' — italic: '1'|'0'",
+
+    "custom_section": "La sección 'custom' NO es procesada por UIManager. main_screen.py la lee con json.load() y la asigna a constantes de estilo para pygame.draw.*. Permite cambiar colores/fuentes del selector de planetas y el fondo sin tocar el código.",
+
+    "widgets_en_uso": "label (#lbl_panel_title · #lbl_campo · #lbl_status) | text_entry_line (entry_v0 · entry_angle · entry_wind) | button (#btn_continuar · botones ControlPanel) | panel (ControlPanel)"
+  }
+}

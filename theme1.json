@@ -260,13 +260,6 @@
       "bold": "1"
     }
   },
-  
- "#panel_simulacion": {
-    "colours": {
-      "dark_bg":       "#0a1828cc",
-      "normal_border": "#2a5090"
-    }
-},
 
   "=== REFERENCIA: COLOURS ===": "normal_bg, hovered_bg, disabled_bg, selected_bg, active_bg, dark_bg | normal_text, hovered_text, disabled_text, selected_text, active_text | normal_border, hovered_border, disabled_border, selected_border, active_border | text_cursor (incluye alpha: #RRGGBBaa) | filled_bar, unfilled_bar (para barras de progreso)",
 
